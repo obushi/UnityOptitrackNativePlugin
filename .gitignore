@@ -259,3 +259,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/OptitrackCameraCapture/opencv_world343.dll
+/OptitrackCameraCapture/opencv_world343d.dll
+/OptitrackCameraCapture/CameraLibrary2015x64S.dll
