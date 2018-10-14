@@ -7,8 +7,8 @@
 #include "IUnityGraphics.h"
 #include "IUnityGraphicsD3D11.h"
 
-//#define UNITY_INTERFACE_API __stdcall
-//#define UNITY_INTERFACE_EXPORT __declspec(dllexport)
+#define UNITY_INTERFACE_API __stdcall
+#define UNITY_INTERFACE_EXPORT __declspec(dllexport)
 
 class OptiCamera
 {
@@ -63,18 +63,28 @@ public:
 		texture_ = static_cast<ID3D11Texture2D*>(ptr);
 	}
 
-	void Update()
+	void SetExposure(int exposure)
 	{
-		frame_ = camera_->GetFrame();
-		if (frame_)
-		{
-			frame_->Rasterize(camera_->PhysicalPixelWidth(), camera_->PhysicalPixelHeight(), image_.step, 24, image_.data);
-			frame_->Release();
-		}
-		else
+		camera_->SetExposure(exposure);
+	}
+
+	void SetIntensity(int intensity)
+	{
+		camera_->SetIntensity(intensity);
+	}
+
+	void SetGainLevel(int gain)
+	{
+		if (gain < 0 || gain >= 8)
 		{
 			return;
 		}
+		auto imagerGain = (CameraLibrary::eImagerGain)gain;
+		camera_->SetImagerGain(imagerGain);
+	}
+
+	void Update()
+	{
 		if (unity_ == nullptr || texture_ == nullptr || image_.empty()) return;
 
 		std::lock_guard<std::mutex> lock(mutex_);
@@ -90,28 +100,31 @@ private:
 	{
 		image_ = cv::Mat(camera_->PhysicalPixelHeight(), camera_->PhysicalPixelWidth(), CV_8UC3);
 		camera_->SetVideoType(Core::MJPEGMode);
-		camera_->SetExposure(9000);
-		camera_->SetImagerGain(CameraLibrary::eImagerGain::Gain_Level7);
+		camera_->SetExposure(1000);
+		camera_->SetImagerGain(CameraLibrary::eImagerGain::Gain_Level0);
 		camera_->SetThreshold(40);
 		camera_->SetIntensity(15);
+		camera_->SetShutterDelay(0);
 		camera_->SetAEC(false);
 		camera_->SetAGC(false);
+		camera_->SetIRFilter(false);
 		camera_->Start();
 
-		//thread_ = std::thread([this]
-		//{
-		//	isRunning_ = true;
+		thread_ = std::thread([this]
+		{
+			isRunning_ = true;
 			
-			//while (isRunning_ && camera_->IsCameraRunning())
-			//{
-			//	std::lock_guard<std::mutex> lock(mutex_);
-
-				//if (frame_)
-				//{
-				//	frame_->Rasterize(camera_->PhysicalPixelWidth(), camera_->PhysicalPixelHeight(), image_.step, 24, image_.data);
-				//}
-			//}
-		//});
+			while (isRunning_ && camera_->IsCameraRunning())
+			{
+				std::lock_guard<std::mutex> lock(mutex_);
+				frame_ = camera_->GetFrame();
+				if (frame_)
+				{
+					frame_->Rasterize(camera_->PhysicalPixelWidth(), camera_->PhysicalPixelHeight(), image_.step, 24, image_.data);
+					frame_->Release();
+				}
+			}
+		});
 	}
 
 	void StopCapture()
@@ -141,7 +154,6 @@ namespace
 	IUnityInterfaces* g_unity = nullptr;
 	OptiCamera* g_camera = nullptr;
 }
-
 
 extern "C"
 {
@@ -199,5 +211,23 @@ extern "C"
 	{
 		auto camera = reinterpret_cast<OptiCamera*>(ptr);
 		camera->SetTexturePtr(texture);
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetCameraExposure(void* ptr, int exposure)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->SetExposure(exposure);
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetCameraIntensity(void* ptr, int intensity)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->SetIntensity(intensity);
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetCameraGainLevel(void* ptr, int gain)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->SetGainLevel(gain);
 	}
 }
