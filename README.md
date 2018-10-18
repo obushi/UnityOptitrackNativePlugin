@@ -11,7 +11,7 @@ Native plugin for Unity which sends camera frames captured by OptiTrack Flex 13
 
 # Setup
 1. Place a Unity project directory under ```%USERPROFILE%```
-2. Create a folder inside ```T(USERPROFILE)\OptitrackCameraCapture\Assets\Plugins\x86_64\```
+2. Create a folder inside ```%USERPROFILE%\OptitrackCameraCapture\Assets\Plugins\x86_64\```
 3. Build the solution.
 4. Open the Unity project to try the complites.
 
