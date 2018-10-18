@@ -7,9 +7,6 @@
 #include "IUnityGraphics.h"
 #include "IUnityGraphicsD3D11.h"
 
-#define UNITY_INTERFACE_API __stdcall
-#define UNITY_INTERFACE_EXPORT __declspec(dllexport)
-
 class OptiCamera
 {
 public:
@@ -170,7 +167,7 @@ extern "C"
 
 	void UNITY_INTERFACE_API OnRenderEvent(int eventId)
 	{
-		//if (g_camera) 
+		if (g_camera) 
 			g_camera->Update();
 	}
 
