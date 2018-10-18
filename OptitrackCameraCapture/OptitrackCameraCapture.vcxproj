@@ -97,7 +97,7 @@
       <AdditionalIncludeDirectories>$(NP_CAMERASDK)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
-      <Command>xcopy /Yq $(TargetPath) C:\Users\inamilab\OptitrackCameraCapture\Assets\Plugins\x86_64\</Command>
+      <Command>xcopy /Yq $(TargetPath) $(USERPROFILE)\OptitrackCameraCapture\Assets\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>opencv_world343d.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -138,7 +138,7 @@
       <AdditionalLibraryDirectories>$(NP_CAMERASDK)lib;$(opencv343)\build\x64\vc15\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Yq $(TargetPath) C:\Users\inamilab\OptitrackCameraCapture\Assets\Plugins\x86_64\</Command>
+      <Command>xcopy /Yq $(TargetPath) $(USERPROFILE)\OptitrackCameraCapture\Assets\Plugins\x86_64\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
