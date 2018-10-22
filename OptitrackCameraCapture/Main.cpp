@@ -16,12 +16,16 @@ public:
 		CameraLibrary::CameraManager::X().WaitForInitialization();
 		camera_ = CameraLibrary::CameraManager::X().GetCamera();
 
-		if (camera_ == 0)
+		try
 		{
+			isConnected_ = !(camera_->IsDisconnected());
+			StartCapture();
+		}
+		catch (...)
+		{
+			isConnected_ = false;
 			return;
 		}
-
-		StartCapture();
 	}
 
 	~OptiCamera()
@@ -53,6 +57,11 @@ public:
 		{
 			return camera_->PhysicalPixelHeight();
 		}
+	}
+
+	bool IsConnected()
+	{
+		return isConnected_;
 	}
 
 	void SetTexturePtr(void* ptr)
@@ -88,8 +97,38 @@ public:
 		auto device = unity_->Get<IUnityGraphicsD3D11>()->GetDevice();
 		ID3D11DeviceContext* context;
 		device->GetImmediateContext(&context);
-		cv::cvtColor(image_, exportImage_, CV_RGB2RGBA);
+
+		if (showOriginal_)
+		{
+			cv::cvtColor(image_, exportImage_, CV_RGB2RGBA);
+		}
+		else
+		{
+			if (backgroundImage_.empty())
+			{
+				backgroundImage_ = image_;
+			}
+			cv::absdiff(image_, backgroundImage_, diffImage_);
+			cv::cvtColor(diffImage_, exportImage_, CV_RGB2RGBA);
+		}
+		
 		context->UpdateSubresource(texture_, 0, nullptr, exportImage_.data, 4 * exportImage_.cols, 4 * exportImage_.cols * exportImage_.rows);
+	}
+
+	void SaveImage()
+	{
+		cv::imwrite("image.jpg", image_);
+	}
+
+	void RecordBackground()
+	{
+
+		backgroundImage_ = image_.clone();
+	}
+
+	void ToggleImage()
+	{
+		showOriginal_ = !showOriginal_;
 	}
 
 private:
@@ -110,7 +149,7 @@ private:
 		thread_ = std::thread([this]
 		{
 			isRunning_ = true;
-			
+
 			while (isRunning_ && camera_->IsCameraRunning())
 			{
 				std::lock_guard<std::mutex> lock(mutex_);
@@ -135,6 +174,8 @@ private:
 
 	CameraLibrary::Camera *camera_;
 	cv::Mat image_;
+	cv::Mat backgroundImage_;
+	cv::Mat diffImage_;
 	cv::Mat exportImage_;
 
 	IUnityInterfaces* unity_;
@@ -144,6 +185,8 @@ private:
 	std::thread thread_;
 	std::mutex mutex_;
 	bool isRunning_ = false;
+	bool isConnected_ = false;
+	bool showOriginal_ = false;
 };
 
 namespace
@@ -167,7 +210,7 @@ extern "C"
 
 	void UNITY_INTERFACE_API OnRenderEvent(int eventId)
 	{
-		if (g_camera) 
+		if (g_camera)
 			g_camera->Update();
 	}
 
@@ -204,6 +247,12 @@ extern "C"
 		return camera->GetHeight();
 	}
 
+	UNITY_INTERFACE_EXPORT bool UNITY_INTERFACE_API IsCameraConnected(void* ptr)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		return camera->IsConnected();
+	}
+
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SetCameraTexturePtr(void* ptr, void* texture)
 	{
 		auto camera = reinterpret_cast<OptiCamera*>(ptr);
@@ -226,5 +275,23 @@ extern "C"
 	{
 		auto camera = reinterpret_cast<OptiCamera*>(ptr);
 		camera->SetGainLevel(gain);
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveImage(void* ptr)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->SaveImage();
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API RecordBackground(void* ptr)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->RecordBackground();
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API ToggleImage(void* ptr)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->ToggleImage();
 	}
 }
