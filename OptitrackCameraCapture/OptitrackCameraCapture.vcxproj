@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(opencv343)\build\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(opencv343)\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(opencv)\build\include;$(NP_CAMERASDK)include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(opencv)\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(opencv)\build\include;$(NP_CAMERASDK)include;$(IncludePath)</IncludePath>
@@ -94,15 +94,15 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(NP_CAMERASDK)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(opencv)\build\include;$(NP_CAMERASDK)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <PostBuildEvent>
-      <Command>xcopy /Yq $(TargetPath) $(USERPROFILE)\OptitrackCameraCapture\Assets\Plugins\x86_64\</Command>
+      <Command>xcopy /Yq $(TargetPath) $(iiiEx2018UnityProject)\Assets\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>opencv_world343d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(NP_CAMERASDK)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(opencv)\build\x64\vc15\lib\opencv_world343d.lib;$(NP_CAMERASDK)lib\CameraLibrary2015x64D.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(NP_CAMERASDK)lib;$(opencv)\build\x64\vc15\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
