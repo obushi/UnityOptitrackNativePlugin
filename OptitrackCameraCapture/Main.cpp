@@ -28,13 +28,6 @@ public:
 		}
 	}
 
-	~OptiCamera()
-	{
-		StopCapture();
-		camera_->Release();
-		CameraLibrary::CameraManager::X().Shutdown();
-	}
-
 	int GetWidth() const
 	{
 		if (camera_ == 0)
@@ -131,6 +124,16 @@ public:
 		showOriginal_ = !showOriginal_;
 	}
 
+	void StopCapture()
+	{
+		isRunning_ = false;
+		if (thread_.joinable())
+		{
+			thread_.join();
+		}
+		camera_->Release();
+	}
+
 private:
 	void StartCapture()
 	{
@@ -161,15 +164,6 @@ private:
 				}
 			}
 		});
-	}
-
-	void StopCapture()
-	{
-		isRunning_ = false;
-		if (thread_.joinable())
-		{
-			thread_.join();
-		}
 	}
 
 	CameraLibrary::Camera *camera_;
@@ -230,6 +224,7 @@ extern "C"
 		auto camera = reinterpret_cast<OptiCamera*>(ptr);
 		if (g_camera == camera)
 		{
+			g_camera->StopCapture();
 			g_camera = nullptr;
 		}
 		delete g_camera;
