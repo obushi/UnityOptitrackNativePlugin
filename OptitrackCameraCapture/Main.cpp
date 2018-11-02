@@ -108,9 +108,10 @@ public:
 		context->UpdateSubresource(texture_, 0, nullptr, exportImage_.data, 4 * exportImage_.cols, 4 * exportImage_.cols * exportImage_.rows);
 	}
 
-	void SaveImage()
+	void SaveImage(int frameNumber)
 	{
-		cv::imwrite("image.jpg", image_);
+		std::string frameCount = std::to_string(frameNumber);
+		cv::imwrite("image_" + frameCount + ".jpg", image_);
 	}
 
 	void RecordBackground()
@@ -272,10 +273,10 @@ extern "C"
 		camera->SetGainLevel(gain);
 	}
 
-	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveImage(void* ptr)
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveImage(void* ptr, int frameNumber)
 	{
 		auto camera = reinterpret_cast<OptiCamera*>(ptr);
-		camera->SaveImage();
+		camera->SaveImage(frameNumber);
 	}
 
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API RecordBackground(void* ptr)
