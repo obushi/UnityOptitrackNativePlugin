@@ -103,7 +103,8 @@ public:
 				backgroundImage_ = image_;
 			}
 			cv::absdiff(backgroundImage_, image_, diffImage_);
-			cv::cvtColor(diffImage_, exportImage_, CV_RGB2RGBA);
+			cv::bitwise_not(diffImage_, invertedImage_);
+			cv::cvtColor(invertedImage_, exportImage_, CV_RGB2RGBA);
 		}
 		
 		context->UpdateSubresource(texture_, 0, nullptr, exportImage_.data, 4 * exportImage_.cols, 4 * exportImage_.cols * exportImage_.rows);
@@ -181,6 +182,7 @@ private:
 	cv::Mat image_;
 	cv::Mat backgroundImage_;
 	cv::Mat diffImage_;
+	cv::Mat invertedImage_;
 	cv::Mat exportImage_;
 
 	IUnityInterfaces* unity_;
