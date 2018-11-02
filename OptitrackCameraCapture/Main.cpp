@@ -2,6 +2,7 @@
 #include <d3d11.h>
 #include <thread>
 #include <mutex>
+#include <ctime>
 #include "cameralibrary.h"
 #include "IUnityInterface.h"
 #include "IUnityGraphics.h"
@@ -101,7 +102,7 @@ public:
 			{
 				backgroundImage_ = image_;
 			}
-			cv::absdiff(image_, backgroundImage_, diffImage_);
+			cv::absdiff(backgroundImage_, image_, diffImage_);
 			cv::cvtColor(diffImage_, exportImage_, CV_RGB2RGBA);
 		}
 		
@@ -110,8 +111,17 @@ public:
 
 	void SaveImage(int frameNumber)
 	{
+		std::time_t rawTime;
+		std::tm* timeInfo;
+		std::time(&rawTime);
+		timeInfo = std::localtime(&rawTime);
+
+		char buffer[80];
+		std::strftime(buffer, 80, "%Y-%m-%d-%H-%M-%S", timeInfo);
+		std::string timeStamp(buffer);
+
 		std::string frameCount = std::to_string(frameNumber);
-		cv::imwrite("image_" + frameCount + ".jpg", image_);
+		cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", image_);
 	}
 
 	void RecordBackground()
