@@ -192,7 +192,7 @@ private:
 		{
 			isRunning_ = true;
 
-			while (isRunning_ && camera_->IsCameraRunning())
+			while (isRunning_)
 			{
 				std::lock_guard<std::mutex> lock(mutex_);
 				frame_ = camera_->GetFrame();
