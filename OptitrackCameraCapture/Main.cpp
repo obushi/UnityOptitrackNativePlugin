@@ -110,7 +110,7 @@ public:
 		context->UpdateSubresource(texture_, 0, nullptr, exportImage_.data, 4 * exportImage_.cols, 4 * exportImage_.cols * exportImage_.rows);
 	}
 
-	void SaveImage(int frameNumber)
+	std::string GetTimeStamp()
 	{
 		std::time_t rawTime;
 		std::tm* timeInfo;
@@ -120,9 +120,36 @@ public:
 		char buffer[80];
 		std::strftime(buffer, 80, "%Y-%m-%d-%H-%M-%S", timeInfo);
 		std::string timeStamp(buffer);
+		return timeStamp;
+	}
 
+	void SaveImage(int frameNumber)
+	{
+		std::string timeStamp = GetTimeStamp();
+		std::string frameCount = std::to_string(frameNumber);
+
+		if (showOriginal_)
+		{
+			cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", image_);
+		}
+		else
+		{
+			cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", invertedImage_);
+		}
+	}
+
+	void SaveOriginalImage(int frameNumber)
+	{
+		std::string timeStamp = GetTimeStamp();
 		std::string frameCount = std::to_string(frameNumber);
 		cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", image_);
+	}
+
+	void SaveSubtractedImage(int frameNumber)
+	{
+		std::string timeStamp = GetTimeStamp();
+		std::string frameCount = std::to_string(frameNumber);
+		cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", invertedImage_);
 	}
 
 	void RecordBackground()
@@ -289,6 +316,18 @@ extern "C"
 	{
 		auto camera = reinterpret_cast<OptiCamera*>(ptr);
 		camera->SaveImage(frameNumber);
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveOriginalImage(void* ptr, int frameNumber)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->SaveOriginalImage(frameNumber);
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveSubtractedImage(void* ptr, int frameNumber)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->SaveSubtractedImage(frameNumber);
 	}
 
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API RecordBackground(void* ptr)
