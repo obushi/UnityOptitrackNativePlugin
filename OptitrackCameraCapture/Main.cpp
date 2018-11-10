@@ -2,6 +2,7 @@
 #include <d3d11.h>
 #include <thread>
 #include <mutex>
+#include <ctime>
 #include "cameralibrary.h"
 #include "IUnityInterface.h"
 #include "IUnityGraphics.h"
@@ -101,16 +102,54 @@ public:
 			{
 				backgroundImage_ = image_;
 			}
-			cv::absdiff(image_, backgroundImage_, diffImage_);
-			cv::cvtColor(diffImage_, exportImage_, CV_RGB2RGBA);
+			cv::absdiff(backgroundImage_, image_, diffImage_);
+			cv::bitwise_not(diffImage_, invertedImage_);
+			cv::cvtColor(invertedImage_, exportImage_, CV_RGB2RGBA);
 		}
 		
 		context->UpdateSubresource(texture_, 0, nullptr, exportImage_.data, 4 * exportImage_.cols, 4 * exportImage_.cols * exportImage_.rows);
 	}
 
-	void SaveImage()
+	std::string GetTimeStamp()
 	{
-		cv::imwrite("image.jpg", image_);
+		std::time_t rawTime;
+		std::tm* timeInfo;
+		std::time(&rawTime);
+		timeInfo = std::localtime(&rawTime);
+
+		char buffer[80];
+		std::strftime(buffer, 80, "%Y-%m-%d-%H-%M-%S", timeInfo);
+		std::string timeStamp(buffer);
+		return timeStamp;
+	}
+
+	void SaveImage(int frameNumber)
+	{
+		std::string timeStamp = GetTimeStamp();
+		std::string frameCount = std::to_string(frameNumber);
+
+		if (showOriginal_)
+		{
+			cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", image_);
+		}
+		else
+		{
+			cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", invertedImage_);
+		}
+	}
+
+	void SaveOriginalImage(int frameNumber)
+	{
+		std::string timeStamp = GetTimeStamp();
+		std::string frameCount = std::to_string(frameNumber);
+		cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", image_);
+	}
+
+	void SaveSubtractedImage(int frameNumber)
+	{
+		std::string timeStamp = GetTimeStamp();
+		std::string frameCount = std::to_string(frameNumber);
+		cv::imwrite("CapturedImages/" + timeStamp + "_" + frameCount + ".jpg", invertedImage_);
 	}
 
 	void RecordBackground()
@@ -153,7 +192,7 @@ private:
 		{
 			isRunning_ = true;
 
-			while (isRunning_ && camera_->IsCameraRunning())
+			while (isRunning_)
 			{
 				std::lock_guard<std::mutex> lock(mutex_);
 				frame_ = camera_->GetFrame();
@@ -170,6 +209,7 @@ private:
 	cv::Mat image_;
 	cv::Mat backgroundImage_;
 	cv::Mat diffImage_;
+	cv::Mat invertedImage_;
 	cv::Mat exportImage_;
 
 	IUnityInterfaces* unity_;
@@ -272,10 +312,22 @@ extern "C"
 		camera->SetGainLevel(gain);
 	}
 
-	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveImage(void* ptr)
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveImage(void* ptr, int frameNumber)
 	{
 		auto camera = reinterpret_cast<OptiCamera*>(ptr);
-		camera->SaveImage();
+		camera->SaveImage(frameNumber);
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveOriginalImage(void* ptr, int frameNumber)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->SaveOriginalImage(frameNumber);
+	}
+
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API SaveSubtractedImage(void* ptr, int frameNumber)
+	{
+		auto camera = reinterpret_cast<OptiCamera*>(ptr);
+		camera->SaveSubtractedImage(frameNumber);
 	}
 
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API RecordBackground(void* ptr)
